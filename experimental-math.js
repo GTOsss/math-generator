@@ -28,10 +28,11 @@
 const cliProgress = require('cli-progress');
 
 const progressBar = new cliProgress.SingleBar({
-  format: 'progress [{bar}] {percentage}% | ETA: {eta}s',
+  format: 'progress [{bar}] {percentage}% | ETA: {eta_formatted}',
   barCompleteChar: '\u2588',
   barIncompleteChar: '\u2591',
   hideCursor: true,
+  barsize: 100,
 });
 
 const STEP_PROGRESSBAR = 100000;
