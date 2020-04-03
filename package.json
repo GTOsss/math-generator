@@ -1,0 +1,15 @@
+{
+  "name": "math-generator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --max-old-space-size=8192 ./index"
+  },
+  "author": "GTOsss",
+  "license": "ISC",
+  "devDependencies": {
+    "cli-progress": "^3.6.1"
+  }
+}
