@@ -97,10 +97,10 @@ const getRandomFormulation = ({
 
     const body = rows.join('');
     const initializedVarKeys = (new Array(currentNumberActions - 1)).fill(0).map((el, index) => `var${index}`);
-    const returnValue = currentNumberActions > 1 ? generateStrRandomOperation(initializedVarKeys, operations) : 'var0';
+    const returnValue = currentNumberActions > 1
+      ? generateStrRandomOperation([...initializedVarKeys, ...keysVariables], operations) : 'var0';
     const destructedArgs = generateStrDestructedArgs(variables);
     const algorithmStr = generateStrAlgorithm({methodName, body, returnValue, destructedArgs});
-
     const valuesStr = JSON.stringify(variables, null, '  ');
     const strCodForTest = `${algorithmStr}\n\n${methodName}(${valuesStr});`;
     // eslint-disable-next-line no-eval
@@ -151,6 +151,7 @@ const getRandomFormulation = ({
 
   progressBar.update(numberIterations);
   progressBar.stop();
+
   return algorithms;
 };
 

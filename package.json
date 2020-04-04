@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --max-old-space-size=8192 ./index"
+    "start": "node --max-old-space-size=8192 ./index",
+    "circle": "node --max-old-space-size=8192 ./circle"
   },
   "author": "GTOsss",
   "license": "ISC",
