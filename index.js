@@ -5,7 +5,7 @@ const {getRandomFormulation} = require('./experimental-math');
 const maxCountRestart = 100;
 
 const start = () => {
-  const numberIterations = 1000 * 1000 * 1;
+  const numberIterations = 1000 * 1000 * 900;
 
   const result = getRandomFormulation({
     cases: [
@@ -27,7 +27,7 @@ const start = () => {
       (a) => `Math.ceil(${a})`,
       (a) => `Math.round(${a})`,
     ],
-    numberActions: 1,
+    numberActions: 15,
     inaccuracy: 0,
     withConsole: true,
     randomNumberActions: true,

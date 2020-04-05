@@ -73,6 +73,7 @@ const getRandomFormulation = ({
 }) => {
   progressBar.start(numberIterations);
   const algorithms = [];
+  const minNumberActions = Object.keys(cases[0].variables).length;
 
   for (let step = 0; step <= numberIterations; step += 1) {
     if (!(step % STEP_PROGRESSBAR)) {
@@ -85,7 +86,7 @@ const getRandomFormulation = ({
     const firstOperation = generateStrRandomOperation(Object.keys(variables), operations);
     const firstRow = generateStrBodyRow(0, firstOperation);
 
-    let currentNumberActions = randomNumberActions ? randomNumber(0, numberActions) : numberActions;
+    let currentNumberActions = randomNumberActions ? randomNumber(minNumberActions, numberActions) : numberActions;
     currentNumberActions = currentNumberActions <= 0 ? 1 : currentNumberActions;
 
     const rows = [firstRow];
