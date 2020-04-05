@@ -2,10 +2,11 @@ const path = require('path');
 const fs = require('fs');
 const {getRandomFormulation} = require('./experimental-math');
 
-const maxCountRestart = 100;
+const maxCountRestart = 0;
 
 const start = () => {
-  const numberIterations = 1000 * 1000 * 900;
+  // const numberIterations = 1000 * 1000 * 900;
+  const numberIterations = 10000;
 
   const result = getRandomFormulation({
     cases: [

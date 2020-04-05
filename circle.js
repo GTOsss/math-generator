@@ -21,7 +21,7 @@ const values = [
 ];
 
 const start = () => {
-  const numberIterations = 1000 * 1000 * 500;
+  const numberIterations = 1000 * 1000 * 900;
 
   const result = getRandomFormulation({
     cases: [
