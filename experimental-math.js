@@ -35,7 +35,7 @@ const progressBar = new cliProgress.SingleBar({
   barsize: 100,
 });
 
-const STEP_PROGRESSBAR = 100000;
+const STEP_PROGRESSBAR = 50000;
 
 const randomNumber = (min, max) => {
   const rand = min + Math.random() * (max + 1 - min);
@@ -43,6 +43,22 @@ const randomNumber = (min, max) => {
 };
 
 const randomValue = (...values) => values[randomNumber(0, values.length - 1)];
+
+const isEqualObjects = (objA, objB, inaccuracy = 0) => {
+  const bKeys = Object.keys(objB);
+
+  for (let i = 0; i < bKeys.length; i += 1) {
+    const key = bKeys[i];
+    const expectedResultPlus = objB[key] + inaccuracy;
+    const expectedResultMinus = objB[key] - inaccuracy;
+    const currentResult = objA[key];
+    if (!((currentResult >= expectedResultMinus) && (currentResult <= expectedResultPlus))) {
+      return false;
+    }
+  }
+
+  return true;
+};
 
 const generateStrAlgorithm = ({
   methodName, destructedArgs, body, returnValue,
@@ -65,8 +81,34 @@ const generateStrRandomOperation = (valueKeys, operations) => {
   return randomOperation(...args);
 };
 
+const generateStrRandomReturn = (numberActions, exampleOfResult) => {
+  const objectKeys = Object.keys(exampleOfResult);
+
+  const variables = objectKeys.map((key, i) => {
+    let min = numberActions - objectKeys.length - 1;
+    min = min < 0 ? 0 : min;
+    const currentIndex = randomNumber(min, numberActions - 1);
+    return `${key}: var${currentIndex}`;
+  });
+
+  return `{${variables.join()}}`;
+};
+
 const MAP_FOR_NO_DUPLICATE = {};
 
+/**
+ *
+ * @param cases
+ * @param numberIterations
+ * @param numberActions рандомное число действий (1 действие = 1 инициализация переменной)
+ * @param methodName Имя метода
+ * @param randomNumberActions // Нужно ли генерировать рандомное число действий
+ * (1 действие = 1 инициализация переменной)
+ * @param inaccuracy // Погрешность.
+ * @param withConsole // Выводить ли в консоль найденный результат в процессе выполнения.
+ * @param operations
+ * @returns {[]}
+ */
 const getRandomFormulation = ({
   cases, numberIterations, numberActions = 1, methodName = 'method', randomNumberActions,
   inaccuracy = 0, withConsole, operations,
@@ -87,34 +129,27 @@ const getRandomFormulation = ({
     const firstRow = generateStrBodyRow(0, firstOperation);
 
     let currentNumberActions = randomNumberActions ? randomNumber(minNumberActions, numberActions) : numberActions;
-    currentNumberActions = currentNumberActions <= 0 ? 1 : currentNumberActions;
 
     const rows = [firstRow];
-    for (let i = 1; currentNumberActions > 1 && i < currentNumberActions - 1; i += 1) {
+    for (let i = 1; i < currentNumberActions; i += 1) {
       const initializedVarKeys = (new Array(i)).fill(0).map((el, index) => `var${index}`);
       const operation = generateStrRandomOperation([...initializedVarKeys, ...keysVariables], operations);
       rows.push(generateStrBodyRow(i, operation));
     }
 
     const body = rows.join('');
-    const initializedVarKeys = (new Array(currentNumberActions - 1)).fill(0).map((el, index) => `var${index}`);
-    const returnValue = currentNumberActions > 1
-      ? generateStrRandomOperation([...initializedVarKeys, ...keysVariables], operations) : 'var0';
+    const returnValue = generateStrRandomReturn(currentNumberActions, cases[0].result);
     const destructedArgs = generateStrDestructedArgs(variables);
     const algorithmStr = generateStrAlgorithm({methodName, body, returnValue, destructedArgs});
     const valuesStr = JSON.stringify(variables, null, '  ');
     const strCodForTest = `${algorithmStr}\n\n${methodName}(${valuesStr});`;
     // eslint-disable-next-line no-eval
     const currentResult = eval(strCodForTest);
-    const resultInaccuracy = expectedResult - currentResult;
-    const strict = resultInaccuracy === 0;
     // eslint-disable-next-line max-len
-    const comment = `// strict: ${strict} | expected: ${expectedResult} | result: ${currentResult} | inaccuracy: ${resultInaccuracy}`;
-
-    const isSuccess = (expectedResult >= currentResult - inaccuracy) && (expectedResult <= currentResult + inaccuracy);
     const isNoDuplicate = !MAP_FOR_NO_DUPLICATE[algorithmStr];
+    // console.log(strCodForTest);
 
-    if (isSuccess && isNoDuplicate) {
+    if (isNoDuplicate && isEqualObjects(currentResult, expectedResult, inaccuracy)) {
       let countSuccess = 0;
 
       for (let i = 1; i < cases.length; i += 1) {
@@ -124,7 +159,7 @@ const getRandomFormulation = ({
         // eslint-disable-next-line no-eval
         const currResult = eval(currStrCodForTest);
 
-        if ((currExpectedResult >= currResult - inaccuracy) && (currExpectedResult <= currResult + inaccuracy)) {
+        if (isEqualObjects(currResult, currExpectedResult, inaccuracy)) {
           countSuccess += 1;
         } else {
           break;
@@ -133,7 +168,7 @@ const getRandomFormulation = ({
 
       if (countSuccess === (cases.length - 1)) {
         if (withConsole) {
-          console.log(`\n${comment}`);
+          console.log(`//////////////////////////////////// step = ${step} ////////////////////////////////////`);
           console.log(algorithmStr);
         }
         progressBar.update(step);
@@ -141,9 +176,6 @@ const getRandomFormulation = ({
         algorithms.push({
           code: algorithmStr,
           strCodForTest,
-          comment,
-          strict,
-          inaccuracy: resultInaccuracy,
           result: currentResult,
         });
       }
