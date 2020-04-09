@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+</head>
+<body>
+<canvas id="myCanvas" width="900px" height="500px"></canvas>
+</body>
+
+<script>
+  var c = document.getElementById('myCanvas');
+  var ctx = c.getContext('2d');
+
+  var num = 50; // Число картинок
+  // var wrap = 250; // Размер "холста" для расположения картинок
+  var radius = 200; // Радиус нашего круга
+
+  for (i = 0; i < num; i++) {
+    var f = 2 / num * i * Math.PI;  // Рассчитываем угол каждой картинки в радианах
+    var x = radius * Math.sin(f);
+    var y = radius * Math.cos(f);
+		// console.log(JSON.stringify({values: {i, radius, PI: Math.PI, num}, result: {x, y}}));
+
+    ctx.fillRect(x, y, 5, 5);
+
+    const t = {
+      'variables': {'_2': 2, 'i': 9, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
+      'result': {'x': 180.9654104932039, 'y': 85.15585831301453}
+    };
+
+    const method = ({_2, i, radius, PI, num}) => {
+      const var0 = _2 / num;
+      const var1 = var0 * i;
+      const var2 = var1 * PI;
+      const var3 = Math.sin(var2);
+      const var4 = Math.cos(var2);
+      const var5 = var3 * radius;
+      const var6 = var4 * radius;
+      return {x: var5, y: var6}
+    };
+
+    console.log(method(t.variables));
+
+    const method2 = ({a, b}) => {
+      const var0 = a / b;
+      const var1 = var0 * a;
+
+      return {x: var0, y: var1};
+    };
+
+    const method2 = ({a, b}) => {
+      const var0 = b / a;
+      const var1 = var0 * a;
+
+      return {x: var0, y: var1};
+    };
+
+    const method2 = ({a, b}) => {
+      const var0 = a / a;
+      const var1 = var0 * a;
+
+      return {x: var0, y: var1};
+    };
+  }
+
+
+  const var0 = a + a;
+  const var1 = a + a;
+  //
+  const var0 = a + a;
+  const var1 = var0 + a;
+	//
+  const var0 = a + a;
+  const var1 = a + var0;
+  //
+  const var0 = a + a;
+  const var1 = var0 + var0;
+
+  ///
+
+  const var0 = a + a;
+  const var1 = var0 + a;
+  const var2 = a + a;
+
+  const var0 = a + a;
+  const var1 = var0 + var0;
+  const var2 = a + a;
+
+  const var0 = a + a;
+  const var1 = var0 + a;
+  const var2 = var0 + a;
+
+  const var0 = a + a;
+  const var1 = var0 + a;
+  const var2 = var1 + a;
+
+  const var0 = a + a;
+  const var1 = var0 + a;
+  const var2 = var0 + a;
+
+</script>
+</html>

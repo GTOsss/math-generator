@@ -6,11 +6,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node --max-old-space-size=8192 ./index",
-    "circle": "node --max-old-space-size=8192 ./circle"
+    "circle": "node --max-old-space-size=8192 ./circle",
+    "combinatorics": "node --max-old-space-size=8192 combinatorics-math.js"
   },
   "author": "GTOsss",
   "license": "ISC",
   "devDependencies": {
     "cli-progress": "^3.6.1"
+  },
+  "dependencies": {
+    "lodash": "^4.17.15"
   }
 }
