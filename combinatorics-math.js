@@ -25,7 +25,7 @@ ${body}
 };`;
 
 const generateStrCodeForTest = ({variables, methodName = 'method', algorithm}) =>
-  `${algorithm}\n${methodName}(${JSON.stringify(variables)})`;
+  `${algorithm}\n\n${methodName}(${JSON.stringify(variables)})`;
 
 const getConstNames = (numberActions) => {
   const result = [];
@@ -52,6 +52,8 @@ const createCombinationOperations = ({variableKeys, operations}) => {
       }
     }
   }
+
+  console.log(resultArray);
 
   return resultArray;
 };
@@ -123,39 +125,18 @@ const createCombinationOperationsWithVariables = ({constNames, operations, varia
 
 /////////////////////////////////// experimental
 
-const variables = {
-  a: 1,
-  b: 2,
-  // c: 3,
-  // d: 4,
-  // e: 5,
-  // f: 6,
-  // i: 7
-};
-const operations = [
-  (a, b) => `${a} + ${b}`,
-  (a, b) => `${a} - ${b}`,
-  // (a, b) => `${a} * ${b}`,
-  // (a, b) => `${a} / ${b}`,
-  // (a, b) => `${a} ** ${b}`,
-  // (a, b) => `${a} % ${b}`,
-  // (a) => `Math.cos(${a})`,
-];
-
-const result = {x: 'x', y: 'y', c: 'c'};
-
-const numberActions = 2;
-
-//todo экспешен о недопустимых variables: var0, var1 ... и тд
+//todo экспешен о недопустимых variables: var0, var1 ... и тд в cases
 const getAlgorithm = ({cases, operations, numberActions}) => {
   for (let c = 0; c < cases.length; c += 1) {
-    const {variables, result} = cases[c];
+    const {variables, result: expectedResult} = cases[c];
 
     const variableKeys = Object.keys(variables);
     const constNames = getConstNames(numberActions);
 
     const operationCombinations = createCombinationOperationsWithVariables({constNames, operations, variableKeys});
+    console.log('Возможных комбинаций с операциями:', operationCombinations.length);
     const bodyRows = createBodyRowsInCycle({numberActions, operationCombinations});
+    console.log('Возможных комбинаций методов:', bodyRows.length);
 
     const destructedArgs = generateStrDestructedArgs(variables);
     const returnValue = generateStrReturnValue(constNames);
@@ -166,55 +147,124 @@ const getAlgorithm = ({cases, operations, numberActions}) => {
       const body = bodyRows[i];
       const algorithm = generateStrAlgorithm({destructedArgs, body, returnValue});
       const strCodeForTest = generateStrCodeForTest({variables, algorithm});
-      const result = eval(strCodeForTest);
+      const currentResult = eval(strCodeForTest);
 
       /// experimental {
-      const keysExpectedResult = Object.keys(result);
-      const keysResult = Object.keys(result);
+      const keysExpectedResult = Object.keys(expectedResult);
+      const keysCurrentResult = Object.keys(currentResult);
 
-      for (let j = 0; j < keysExpectedResult.length; j += 1) {
-        const expectedResultKeyA = keysExpectedResult[j];
+      const depthCurrentKey = [];
+      const cycle = (depth = 0) => {
+        for (let j = 0; j < keysCurrentResult.length; j += 1) {
+          depthCurrentKey[depth] = keysCurrentResult[j];
 
-        for (let k = 0; k < keysResult.length; k += 1) {
-          // const resultKeyA = keysResult[k];
-          console.log(expectedResultKeyA);
+          if (depth < (keysCurrentResult.length - 1)) {
+            cycle(depth + 1);
+          }
+
+          if (depth === (keysCurrentResult.length - 1)) {
+            const depthExpectedKey = [];
+            const cycleInner = (depthInner = 0) => {
+              for (let k = 0; k < keysExpectedResult.length; k += 1) {
+                depthExpectedKey[depthInner] = keysExpectedResult[k];
+
+                if (depthInner < (keysExpectedResult.length - 1)) {
+                  cycleInner(depthInner + 1);
+                }
+
+                if (depthInner === (keysExpectedResult.length - 1)) {
+                  let countEqual = 0;
+                  const constNamesAndKeysNames = [];
+                  const mapConstNamesAndKeyNames = {};
+                  for (let l = 0; l < depthExpectedKey.length; l += 1) {
+                    const keyA = depthExpectedKey[l];
+                    const keyB = depthCurrentKey[l];
+
+                    if (expectedResult[keyA] === currentResult[keyB]) {
+                      countEqual += 1;
+                      mapConstNamesAndKeyNames[keyA] = keyB;
+                      constNamesAndKeysNames.push([keyA, keyB]);
+                    }
+
+                    if (countEqual === depthExpectedKey.length) {
+                      const countKeys = Object.keys(mapConstNamesAndKeyNames).length;
+                      if (countKeys === keysExpectedResult.length) {
+                        const returnValues = constNamesAndKeysNames
+                          .map(([keyName, constName]) => `${keyName}: ${constName}`).join(', ');
+                        const returnValue = `{${returnValues}}`;
+                        // console.log(returnValues);
+                        const algorithm = generateStrAlgorithm({destructedArgs, body, returnValue});
+                        const strCodeForTest = generateStrCodeForTest({variables, algorithm});
+                        for (let b = 1; b < cases.length; b += 1) {
+                          const result = eval(generateStrCodeForTest({variables: cases[b].variables, algorithm}));
+                          const success = _.isEqual(result, cases[b].result);
+                          if (success) {
+                            console.log(strCodeForTest);
+                            console.log('\n//////////////////////////////////////////////////////////////');
+                            algorithms.push(strCodeForTest);
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            };
+
+            cycleInner();
+          }
         }
-      }
-      /// }
 
-      algorithms.push(algorithm);
+      };
+
+      cycle();
+      // console.log('\n');
     }
 
     console.log(algorithms.length);
 
     const currentPath = path.resolve(`${__dirname}/combinatorics-output.txt`);
-    fs.writeFileSync(currentPath, `/////////////\n\n${algorithms.join('\n\n')}`);
+    const separator = '/////////////////////////////////////////////////';
+    fs.writeFileSync(currentPath, `${separator}\n\n${algorithms.join(`\n\n${separator}\n\n`)}`);
   }
 };
 
 getAlgorithm({
   cases: [
-    {
-      'variables': {'a': 1, 'b': 1, 'c': 1},
-      'result': {'x': 2, 'y': 3}
-    },
+    // {
+    //   'variables': {'const2': 2, 'i': 0, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
+    //   'result': {'x': 0, 'y': 200}
+    // },
+    // {
+    //   'variables': {'const2': 2, 'i': 9, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
+    //   'result': {'x': 180.9654104932039, 'y': 85.15585831301453}
+    // },
+    // {
+    //   'variables': {'const2': 2, 'i': 41, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
+    //   'result': {'x': -180.9654104932039, 'y': 85.15585831301452}
+    // },
+    // {
+    //   'variables': {'a': 1, 'b': 2, 'c': 3},
+    //   'result': {'x': 2, 'y': 1.5}
+    // },
     // {
     //   'variables': {'a': 2, 'b': 2, 'c': 2},
-    //   'result': {'x': 4, 'y': 6}
+    //   'result': {'x': 4, 'y': 1}
     // },
-    // {
-    //   'variables': {'a': 10, 'b': 10, 'c': 10},
-    //   'result': {'x': 20, 'y': 30}
-    // },
+    {
+      'variables': {'a': 10, 'b': 10},
+      'result': {'x': 20}
+    },
   ],
   operations: [
-    (a, b) => `${a} + ${b}`,
-    (a, b) => `${a} - ${b}`,
-    // (a, b) => `${a} * ${b}`,
-    // (a, b) => `${a} / ${b}`,
+    // (a, b) => `${a} + ${b}`,
+    // (a, b) => `${a} - ${b}`,
+    (a, b) => `${a} * ${b}`,
+    (a, b) => `${a} / ${b}`,
     // (a, b) => `${a} ** ${b}`,
     // (a, b) => `${a} % ${b}`,
-    // (a) => `Math.cos(${a})`,
+    (a) => `Math.cos(${a})`,
+    (a) => `Math.sin(${a})`,
   ],
-  numberActions: 2,
+  numberActions: 3,
 });
