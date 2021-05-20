@@ -28,6 +28,8 @@ const cos = (a) => Math.cos(a);
 cos.toStr = (a) => `Math.cos(${a})`;
 const sin = (a) => Math.sin(a);
 sin.toStr = (a) => `Math.sin(${a})`;
+// const doNothing = (a) => a;
+// doNothing.toStr = (a) => `${a}`;
 
 const calcFactorial = (num) => {
   let result = 1;
@@ -42,6 +44,7 @@ const calcFactorial = (num) => {
 
   return result;
 };
+// Math.doNothing = doNothing;
 Math.factorial = calcFactorial;
 const factorial = (a) => Math.factorial(a);
 factorial.toStr = (a) => `Math.factorial(${a})`;
@@ -51,9 +54,6 @@ const getCalcMethodName = (key) => `calc${_.upperFirst(_.camelCase(key))}`;
 const numberWithSpaces = (value) => {
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 };
-
-const generateStrOperation = (operation, operands) =>
-  operation(...operands);
 
 const generateStrRowBody = (constIndex, operationStr) =>
   `  const var${constIndex} = ${operationStr};`;
@@ -69,8 +69,6 @@ const generateStrDestructedArgs = (entriesVariables) => {
   return `{${keys}}`;
 };
 
-const generateStrReturnValue = (constNames) => `{${constNames.join()}}`;
-
 const generateStrAlgorithm = ({
   methodName = 'method', destructedArgs, body, returnValue,
 }) => `const ${methodName} = (${destructedArgs}) => {
@@ -78,23 +76,17 @@ ${body ? `${body}\n` : ''}
   return ${returnValue};
 };`;
 
-const generateStrCodeForTest = ({variables, methodName = 'method', algorithm}) =>
-  `${algorithm}\n\n${methodName}(${JSON.stringify(variables)})`;
+const generateStrReturnMainMethod = (resultKeys) => resultKeys
+  .reduce((acc, curr) => `${acc}    ${curr}: ${getCalcMethodName(curr)}(variables),\n`, '');
 
-const getConstNames = (numberActions) => {
-  const result = [];
-  for (let i = 0; i < numberActions; i += 1) {
-    result.push(`var${i}`);
-  }
-
-  return result;
+const compareWithInaccuracy = (a, b, inaccuracy) => {
+  const expectedResultPlus = b + inaccuracy;
+  const expectedResultMinus = b - inaccuracy;
+  return (a >= expectedResultMinus) && (a <= expectedResultPlus);
 };
 
-const generateStrReturnMainMethod = (resultKeys) => resultKeys
-  .reduce((acc, curr, i) => `${acc}    ${curr}: ${getCalcMethodName(curr)}(variables),\n`, '');
-
 const getAlgorithm = ({
-  numberActions, cases, operations, consoleLog
+  numberActions, cases, operations, consoleLog, inaccuracy = 0,
 }) => {
   let counter = 0;
   const entriesVariables = Object.entries(cases[0].variables);
@@ -103,12 +95,12 @@ const getAlgorithm = ({
   const cycleForKeys = (depth = 0) => {
     for (let i = 0; i < entriesVariables.length; i += 1) {
       currentVariablesEntries[depth] = entriesVariables[i];
-      const numberCycleForKeys = Math.max(numberActions, entriesVariables.length - 1);
+      const numberCycleForKeys = Math.max(numberActions, entriesVariables.length);
       if (depth < numberCycleForKeys) {
         cycleForKeys(depth + 1);
       }
 
-      if (depth === (entriesVariables.length - 1)) {
+      if (depth === (entriesVariables.length)) {
         const currentOperations = [];
         const cycleForOperations = (depth = 0) => {
           for (let j = 0; j < operations.length; j += 1) {
@@ -144,7 +136,7 @@ const getAlgorithm = ({
                   const b = currentVariables[keyB];
                   result.resultValue = currentOperation(a, b);
                   Object.entries(currentCase.result).some(([key, value]) => {
-                    if (value === result.resultValue) {
+                    if (compareWithInaccuracy(value, result.resultValue, inaccuracy)) {
                       result.successResultKey = key;
                       result.maxIndex = k;
                       return true;
@@ -166,12 +158,12 @@ const getAlgorithm = ({
               }
 
               let successCount = 0;
-              cases.slice(1).some(({result, variables}, i) => {
+              cases.slice(1).some(({result, variables}) => {
                 const {resultValue} = algorithm({
                   currentCase: {result, variables},
                   maxIndex,
                 });
-                if (resultValue === result[successResultKey]) {
+                if (compareWithInaccuracy(resultValue, result[successResultKey], inaccuracy)) {
                   successCount += 1;
                   return false;
                 }
@@ -202,7 +194,8 @@ const getAlgorithm = ({
                 results.push(method);
 
                 if (consoleLog) {
-                  console.log(`\nНайден алгоритм для получения ${successResultKey}. Итерация № ${numberWithSpaces(counter)}`);
+                  console.log(`\nНайден алгоритм для получения ${successResultKey}. Итерация № ${numberWithSpaces(
+                    counter)}`);
                   console.log(method, '\n');
                 }
               }
@@ -227,37 +220,40 @@ const getAlgorithm = ({
 };
 
 const main = ({
-  numberActions, cases, operations, consoleLog
+  numberActions, cases, operations, consoleLog, withProgressbar, inaccuracy,
 }) => {
   const numberOperations = operations.length;
   const numberVariables = Object.keys(cases[0].variables).length;
 
-  const calcNumberIterations = ({numberActions, numberOperations, numberVariables}) => {
-    const var0 = numberOperations ** numberActions;
-    const var1 = numberVariables ** numberVariables;
-    const var2 = var0 * var1;
+  console.log({numberActions, numberOperations, numberVariables});
 
-    return var2;
-  };
+  // const calcNumberIterations = ({numberActions, numberOperations, numberVariables}) => {
+  //   const var0 = numberVariables ** numberOperations;
+  //   const var1 = var0 * (numberOperations ** numberActions);
+  //
+  //   return var1;
+  // };
 
-  const willIterations = calcNumberIterations({numberActions, numberOperations, numberVariables});
-  const oneBillion = 10 ** 6;
-  const suffix = willIterations > oneBillion ? ' млн' : '';
-  const numberBillion = numberWithSpaces(Math.ceil(willIterations / oneBillion));
-  const numberIterationStr = numberWithSpaces(willIterations);
-  if (willIterations > oneBillion) {
-    console.log(`Потребуется около ${numberBillion}${suffix} итераций | точное значение: ${numberIterationStr}`);
-  } else {
-    console.log(`Потребуется итераций: ${numberIterationStr}`);
-  }
-  progressBar.start(willIterations);
+  // const willIterations = calcNumberIterations({numberActions, numberOperations, numberVariables});
+  // const oneBillion = 10 ** 6;
+  // const suffix = willIterations > oneBillion ? ' млн' : '';
+  // const numberBillion = numberWithSpaces(Math.ceil(willIterations / oneBillion));
+  // const numberIterationStr = numberWithSpaces(willIterations);
+  // if (willIterations > oneBillion) {
+  //   console.log(`Потребуется около ${numberBillion}${suffix} итераций | точное значение: ${numberIterationStr}`);
+  // } else {
+  //   console.log(`Потребуется итераций: ${numberIterationStr}`);
+  // }
+  // if (withProgressbar) {
+  //   progressBar.start(willIterations);
+  // }
 
   const resultMap = {};
   let maxLength = 0;
   const resultKeys = Object.keys(cases[0].result);
   resultKeys.forEach((resultKey) => {
     const currentCases = cases.map((c) => ({...c, result: {[resultKey]: c.result[resultKey]}}));
-    resultMap[resultKey] = getAlgorithm({cases: currentCases, numberActions, operations, consoleLog});
+    resultMap[resultKey] = getAlgorithm({cases: currentCases, numberActions, operations, consoleLog, inaccuracy});
     maxLength = Math.max(resultMap[resultKey].length);
     // todo исправить Math.max
   });
@@ -285,16 +281,16 @@ const main = ({
 ////// finally end
 
 const test = ({_2, num, i, PI, radius}) => {
-  const var0 = _2 / num;
-  const var1 = var0 * i;
-  const var2 = var1 * PI;
-  const var3 = Math.sin(var2);
-  const var4 = Math.cos(var2);
-  const var5 = var3 * radius;
-  const var6 = var4 * radius;
+  const var0 = _2 - num;
+  const var1 = var0 + _2;
+  // const var2 = var1 * PI;
+  // const var3 = Math.sin(var2);
+  // const var4 = Math.cos(var2);
+  // const var5 = var3 * radius;
+  // const var6 = var4 * radius;
   return {
-    x: var5,
-    y: var6,
+    x: 'var1',
+    // y: var6,
   }
 };
 
@@ -303,7 +299,7 @@ const variables = {
   num: 6,
   i: 3,
   PI: 9,
-  radius: 8,
+  // radius: 8,
   // e: 10,
   // f: 500,
 };
@@ -313,13 +309,13 @@ const variables2 = {
   num: 2,
   i: 7,
   PI: 3,
-  radius: 8,
+  // radius: 8,
   // d: 10,
   // e: 20,
   // f: 500,
 };
 
-console.log(test(variables));
+// console.log(test(variables));
 // console.log(test(variables2));
 
 const currentPath = path.resolve(`${__dirname}/combinatorics-output.txt`);
@@ -331,19 +327,49 @@ const operations = [
   multiply,
   divide,
   pow,
+  // doNothing,
   factorial,
   max,
   // sin,
   // cos,
 ];
-const numberActions = 7;
+const numberActions = 6;
 
 // for (let i = 1; i <= 2; i += 1) {
 main({
+  // inaccuracy: 0.9,
+  inaccuracy: 0,
   operations,
   numberActions,
   consoleLog: true,
+  // withProgressbar: true,
   cases: [
+    // {
+    //   variables: {perspective: 500, translateZ: 400, scale: 0.2},
+    //   result: {translateX: 600}
+    // },
+    // {
+    //   variables: {perspective: 500, translateZ: 210, scale: 0.58},
+    //   result: {translateX: 63}
+    // },
+    // {
+    //   variables: {perspective: 500, translateZ: 150, scale: 0.7},
+    //   result: {translateX: 45}
+    // },
+    // {
+    //   variables: {perspective: 500, translateZ: 0, scale: 1},
+    //   result: {translateX: 0}
+    // },
+
+    // {
+    //   variables: {perspective: 500, translateZ: 100},
+    //   result: {scale: 0.8}
+    // },
+    // {
+    //   variables: {perspective: 500, translateZ: 300},
+    //   result: {scale: 0.4}
+    // },
+
     // {
     //   variables,
     //   result: test(variables),
@@ -353,41 +379,52 @@ main({
     //   result: test(variables2),
     // },
 
-    {
-      'variables': {'const2': 2, 'i': 0, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
-      'result': {'x': 0, 'y': 200}
-    },
-    {
-      'variables': {'const2': 2, 'i': 9, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
-      'result': {'x': 180.9654104932039, 'y': 85.15585831301453}
-    },
-    {
-      'variables': {'const2': 2, 'i': 41, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
-      'result': {'x': -180.9654104932039, 'y': 85.15585831301452}
-    },
-
     // {
-    //   'variables': {'a': 1, 'b': 2, 'c': 3},
-    //   'result': {'x': 2, 'y': 1.5}
+    //   'variables': {'const2': 2, 'i': 0, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
+    //   'result': {'x': 0, 'y': 200}
     // },
+    // {
+    //   'variables': {'const2': 2, 'i': 9, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
+    //   'result': {'x': 180.9654104932039, 'y': 85.15585831301453}
+    // },
+    // {
+    //   'variables': {'const2': 2, 'i': 41, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
+    //   'result': {'x': -180.9654104932039, 'y': 85.15585831301452}
+    // },
+    // {
+    //   'variables': {a: 1.5, b: 3.5, c: 10, d: 5}, // (a + b) - (c + d)
+    //   'result': {result: 10}
+    // },
+
     // {
     //   'variables': {'a': 2, 'b': 2, 'c': 2},
     //   'result': {'x': 4, 'y': 1}
     // },
 
     // {
-    //   variables: { numberActions: 4, numberOperations: 7, numberVariables: 4},
-    //   result: {numberIterations: 614656}
-    // },
-    // {
-    //   variables: { numberActions: 7, numberOperations: 4, numberVariables: 3 },
-    //   result: {numberIterations: 442368}
+    //   variables: { numberActions: 4, numberOperations: 7, numberVariables: 2 },
+    //   result: {numberIterations: 19208}
     // },
     // {
     //   variables: { numberActions: 4, numberOperations: 7, numberVariables: 3 },
-    //   result: {numberIterations: 64827}
+    //   result: {numberIterations: 194481}
     // },
+    // {
+    //   variables: { numberActions: 4, numberOperations: 7, numberVariables: 4 },
+    //   result: {numberIterations: 2458624}
+    // },
+    {
+      variables: {numberActions: 4, numberOperations: 3, numberVariables: 5, one: 2},
+      result: {numberIterations: 1265625}
+    },
+    {
+      variables: {numberActions: 4, numberOperations: 3, numberVariables: 6, one: 2},
+      result: {numberIterations: 22674816}
+    },
   ],
 });
 // }
 
+//todo Алгоритм работает не плохо, но он не умеет создавать
+// комбинации из 2 переменных в которых используются аргументы и не используется предыдущие переменные.
+// иными словами, генерируется только цепочка действий без возможности сделать 2 ветви действия

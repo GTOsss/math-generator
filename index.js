@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const {getRandomFormulation, randomNumber} = require('./experimental-math');
+const {getRandomFormulation, randomNumber} = require('./combinatorics-math');
 // 3x + 4
 const maxCountRestart = 25000;
 
@@ -18,10 +18,9 @@ const values = [
   {a: 1, b: 3, c: 36, d: 3, e: 4.1},
 ];
 
-
 const start = () => {
-  const numberIterations = 1000 * 1000 * 1;
-  // const numberIterations = 100000;
+  // const numberIterations = 1000 * 1000 * 0.25;
+  const numberIterations = 500;
 
   // const randomCoif = randomNumber(2, 2);
   // const randomCoif2 = randomNumber(4, 4);
@@ -30,37 +29,43 @@ const start = () => {
   // console.log({randomCoif, randomCoif2, randomCoif3});
 
   const result = getRandomFormulation({
-    cases: [
-      {variables: values[0], result: test(values[0])},
-      {variables: values[1], result: test(values[1])},
-      {variables: values[2], result: test(values[2])},
-
-      // {variables: {[`coifС_${randomCoif3}`]: randomCoif3, [`coifA_${randomCoif2}`]: randomCoif2, [`coifB_${randomCoif}`]: randomCoif, x: 1}, result: 11},
-      // {variables: {[`coifС_${randomCoif3}`]: randomCoif3, [`coifA_${randomCoif2}`]: randomCoif2, [`coifB_${randomCoif}`]: randomCoif, x: 2}, result: 28},
-      // {variables: {[`coifС_${randomCoif3}`]: randomCoif3, [`coifA_${randomCoif2}`]: randomCoif2, [`coifB_${randomCoif}`]: randomCoif, x: 10}, result: 524},
+    cases: [ // составляем таблицу различных кейсов с переменными
+      {
+        variables: {
+          max: 200, // 100% === 777
+          current: 20, // текущее число
+          percent: 100,
+        },
+        result: 10, // результат
+      },
+      {
+        variables: {
+          max: 777, // 100% === 777
+          current: 200, // текущее число
+          percent: 100,
+        },
+        result: 25.74002574002574, // результат
+      },
     ],
     operations: [
-      // (a) => `${a} * Math.randomNumber(0, 999)`,
-      // (a) => `${a} + Math.randomNumber(0, 999)`,
-
       (a, b) => `${a} * ${b}`,
       (a, b) => `${a} / ${b}`,
       (a, b) => `${a} + ${b}`,
       (a, b) => `${a} - ${b}`,
       (a, b) => `${a} % ${b}`,
-      (a, b) => `${a} ** ${b}`,
+      // (a, b) => `${a} ** ${b}`,
 
-      (a) => `Math.sqrt(${a})`,
-      (a) => `Math.sin(${a})`,
-      (a) => `Math.cos(${a})`,
-      (a) => `Math.floor(${a})`,
-      (a) => `Math.ceil(${a})`,
-      (a) => `Math.round(${a})`,
+      // (a) => `Math.sqrt(${a})`,
+      // (a) => `Math.sin(${a})`,
+      // (a) => `Math.cos(${a})`,
+      // (a) => `Math.floor(${a})`,
+      // (a) => `Math.ceil(${a})`,
+      // (a) => `Math.round(${a})`,
     ],
-    numberActions: 3,
+    numberActions: 1,
     inaccuracy: 0,
     withConsole: true,
-    randomNumberActions: false,
+    randomNumberActions: true,
     numberIterations,
   });
 

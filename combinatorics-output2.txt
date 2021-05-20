@@ -1,0 +1,8 @@
+const calcNumberIterations = ({numberActions, numberOperations, numberVariables}) => {
+  const var0 = numberOperations ** numberOperations;
+  const var1 = var0 * numberActions;
+  const var2 = var1 ** numberActions;
+  const var3 = var2 / numberVariables;
+
+  return var3;
+};

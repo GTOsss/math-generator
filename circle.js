@@ -21,23 +21,33 @@ const values = [
 ];
 
 const start = () => {
-  const numberIterations = 1000 * 1000 * 900;
+  const numberIterations = 1000 * 1000 * 100;
   // const numberIterations = 100;
 
   const result = getRandomFormulation({
     cases: [
       {
-        'variables': {'const2': 2, 'i': 0, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
-        'result': {'x': 0, 'y': 200}
+        variables: { numberActions: 4, numberOperations: 3, numberVariables: 5},
+        result: {numberIterations: 1265625}
       },
-      {
-        'variables': {'const2': 2, 'i': 9, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
-        'result': {'x': 180.9654104932039, 'y': 85.15585831301453}
-      },
-      {
-        'variables': {'const2': 2, 'i': 41, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
-        'result': {'x': -180.9654104932039, 'y': 85.15585831301452}
-      },
+      // {
+      //   variables: { numberActions: 4, numberOperations: 3, numberVariables: 6},
+      //   result: {numberIterations: 22674816}
+      // },
+
+
+      // {
+      //   'variables': {'const2': 2, 'i': 0, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
+      //   'result': {'x': 0, 'y': 200}
+      // },
+      // {
+      //   'variables': {'const2': 2, 'i': 9, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
+      //   'result': {'x': 180.9654104932039, 'y': 85.15585831301453}
+      // },
+      // {
+      //   'variables': {'const2': 2, 'i': 41, 'radius': 200, 'PI': 3.141592653589793, 'num': 50},
+      //   'result': {'x': -180.9654104932039, 'y': 85.15585831301452}
+      // },
 
       // {variables: {r: 4, x: 16}, result: {z: 4}},
       // {variables: {r: 8, x: 64}, result: {z: 8}},
@@ -64,22 +74,22 @@ const start = () => {
     operations: [
       (a, b) => `${a} * ${b}`,
       (a, b) => `${a} / ${b}`,
-      // (a, b) => `${a} + ${b}`,
-      // (a, b) => `${a} - ${b}`,
+      (a, b) => `${a} + ${b}`,
+      (a, b) => `${a} - ${b}`,
       // (a, b) => `${a} % ${b}`,
-      // (a, b) => `${a} ** ${b}`,
+      (a, b) => `${a} ** ${b}`,
 
       // (a) => `Math.sqrt(${a})`,
-      (a) => `Math.sin(${a})`,
-      (a) => `Math.cos(${a})`,
+      // (a) => `Math.sin(${a})`,
+      // (a) => `Math.cos(${a})`,
       // (a) => `Math.floor(${a})`,
       // (a) => `Math.ceil(${a})`,
       // (a) => `Math.round(${a})`,
     ],
-    numberActions: 7,
+    numberActions: 4,
     inaccuracy: 0,
     withConsole: true,
-    randomNumberActions: false, // todo протестить как влияет количество variables на минимальное количество экшенов
+    randomNumberActions: true, // todo протестить как влияет количество variables на минимальное количество экшенов
     numberIterations,
   });
 
